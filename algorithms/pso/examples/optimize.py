@@ -6,13 +6,10 @@ import numpy as np
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.config import (
-    ANIMATIONS_2D_PATH,
-    ANIMATIONS_3D_PATH,
     COGNITIVE,
     DIMENSION,
     FUNCTION_NAMES,
     FUNCTIONS,
-    GRAPHS_PATH,
     INERTIA,
     ITERATIONS,
     N_PARTICLES,
@@ -39,29 +36,29 @@ def run(function_name: str, idx: int, total: int) -> None:
     )
     gbest_position, gbest = pso.optimize(INERTIA, COGNITIVE, SOCIAL)
 
-    print(f"✔ Best Solution found: {gbest_position}")
-    print(f"✔ Fitness of Best Solution: {gbest}")
+    print(f"✔ Best solution found: {gbest_position}")
+    print(f"✔ Fitness of best solution: {gbest}")
 
     print("→ Generating convergence graph...")
     pso.plot_convergence(
-        f"{GRAPHS_PATH}{function_name}_graph.png",
+        f"{function_name}_graph",
         function_name,
     )
     print("✔ Convergence graph saved.")
 
-    animation_dimension = 2
+    animation_dimension = DIMENSION
     if animation_dimension == DIMENSION:
         print("→ Generating 2D animation...")
-        pso.generate_animation_2d(
-            output_path=f"{ANIMATIONS_2D_PATH}{function_name}_animation_2d.gif",
+        pso.animate_2d(
+            output_filename=f"{function_name}_animation_2d",
             function_name=function_name,
             bounds=bounds,
         )
         print("✔ 2D animation saved.")
 
         print("→ Generating 3D animation...")
-        pso.generate_animation_3d(
-            output_path=f"{ANIMATIONS_3D_PATH}{function_name}_animation_3d.gif",
+        pso.animate_3d(
+            output_filename=f"{function_name}_animation_3d",
             function_name=function_name,
             bounds=bounds,
         )

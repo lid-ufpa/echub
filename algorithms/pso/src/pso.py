@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
 
+from src.config import ANIMATIONS_2D_PATH, ANIMATIONS_3D_PATH, GRAPHS_PATH
+
 
 class PSO:
     def __init__(
@@ -22,7 +24,7 @@ class PSO:
         self.gbest = self.pbest[best_idx].copy()
 
         self.gbest_history = []
-        self.positions_history = []
+        self.history = []
         self.num_function_call = [0]
 
     def _update_velocities(
@@ -57,35 +59,45 @@ class PSO:
         cognitive: float,
         social: float,
     ) -> tuple[np.ndarray, float]:
+        self.history = []
+
         for _ in range(self.iterations):
             self._update_velocities(inertia, cognitive, social)
             self._update_positions()
             self._update_best_positions()
 
-            self.positions_history.append(self.positions.copy())
+            history_entry = {
+                "positions": self.positions.copy(),
+                "best_fitness": self.fitness(self.gbest),
+            }
+
+            self.history.append(history_entry)
 
             self.num_function_call.append(self.num_function_call[-1] + 1)
             self.gbest_history.append(self.fitness(self.gbest))
         return self.gbest, self.fitness(self.gbest)
 
-    def plot_convergence(self, output_path: str, function_name: str) -> None:
+    def plot_convergence(self, output_filename: str, function_name: str) -> None:
         plt.figure(figsize=(10, 6))
         plt.plot(self.num_function_call[:-1], self.gbest_history)
         plt.title(f"Convergence ({function_name})")
         plt.xlabel("Number of Function Evaluations")
         plt.ylabel("Best Fitness (gbest)")
-        plt.savefig(output_path)
+        plt.savefig(f"{GRAPHS_PATH}{output_filename}.png")
         plt.close()
 
-    def generate_animation_2d(
+    def animate_2d(
         self,
-        output_path: str,
+        output_filename: str,
         function_name: str,
         bounds: tuple[float, float],
     ) -> None:
+        if not self.history:
+            return
+
         plt.style.use("default")
 
-        fig, ax = plt.subplots(figsize=(6, 6), facecolor="white")
+        fig, ax = plt.subplots(figsize=(8, 8), facecolor="white")
 
         x = np.linspace(bounds[0], bounds[1], 200)
         y = np.linspace(bounds[0], bounds[1], 200)
@@ -105,11 +117,12 @@ class PSO:
         ax.set_facecolor("white")
 
         frames = []
-        for i, positions in enumerate(self.positions_history):
+        for i, history_entry in enumerate(self.history):
+            positions = history_entry["positions"]
             scatter = ax.scatter(
                 positions[:, 0],
                 positions[:, 1],
-                c="#FF8800",
+                c="#E6550D",
                 s=40,
                 edgecolors="black",
                 linewidths=0.5,
@@ -118,7 +131,7 @@ class PSO:
             title = ax.text(
                 0.5,
                 1.05,
-                f"Optimization ({function_name}) | Iteration: {i + 1}",
+                f"Optimization ({function_name}) - Iteration: {i + 1}/{self.iterations} | Best Fitness: {history_entry['best_fitness']:.2f}",
                 transform=ax.transAxes,
                 ha="center",
                 fontsize=14,
@@ -127,15 +140,18 @@ class PSO:
             frames.append([scatter, title])
 
         ani = animation.ArtistAnimation(fig, frames, interval=150, blit=True, repeat_delay=1000)
-        ani.save(output_path, writer="pillow")
+        ani.save(f"{ANIMATIONS_2D_PATH}{output_filename}.gif", writer="pillow")
         plt.close(fig)
 
-    def generate_animation_3d(
+    def animate_3d(
         self,
-        output_path: str,
+        output_filename: str,
         function_name: str,
         bounds: tuple[float, float],
     ) -> None:
+        if not self.history:
+            return
+
         fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection="3d")
 
@@ -168,7 +184,8 @@ class PSO:
         ax.set_ylim(bounds)
 
         frames = []
-        for i, positions in enumerate(self.positions_history):
+        for i, history_entry in enumerate(self.history):
+            positions = history_entry["positions"]
             fitness = np.array([self.fitness(p) for p in positions])
 
             scatter = ax.scatter(
@@ -184,7 +201,7 @@ class PSO:
             title = ax.text2D(
                 0.5,
                 0.95,
-                f"Optimization ({function_name}) - Iteration: {i + 1}",
+                f"Optimization ({function_name}) - Iteration: {i + 1}/{self.iterations} | Best Fitness: {history_entry['best_fitness']:.2f}",
                 transform=ax.transAxes,
                 ha="center",
                 fontsize=14,
@@ -192,5 +209,5 @@ class PSO:
             frames.append([scatter, title])
 
         ani = animation.ArtistAnimation(fig, frames, interval=150, blit=True, repeat_delay=1000)
-        ani.save(output_path, writer="pillow")
+        ani.save(f"{ANIMATIONS_3D_PATH}{output_filename}.gif", writer="pillow")
         plt.close(fig)
