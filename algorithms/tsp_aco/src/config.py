@@ -1,0 +1,7 @@
+N_CITIES = 100
+N_ANTS = 20
+N_ITERATIONS = 100
+ALPHA = 1.0
+BETA = 2.0
+EVAPORATION_RATE = 0.7
+ANIMATION_PATH = "algorithms/tsp_aco/results/"
